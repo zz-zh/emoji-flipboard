@@ -20,8 +20,8 @@ function App() {
     const onScroll = () => {
       const scrollY = window.scrollY;
       const maxScroll = document.body.scrollHeight - window.innerHeight;
-      // Allow scrollProgress to go up to 2 (2x page height)
-      const progress = Math.min(2, Math.max(0, scrollY / maxScroll * 2));
+      // Allow scrollProgress to go up to 2.5 (2.5x page height)
+      const progress = Math.min(2.5, Math.max(0, scrollY / maxScroll * 2.5));
       setScrollProgress(progress);
     };
     window.addEventListener('scroll', onScroll);
@@ -34,65 +34,56 @@ function App() {
         <div className="flipboard-grid spaced">
           {Array.from({ length: NUM_CELLS }).map((_, i) => {
             const col = (i % NUM_COLS) + 1; // 1-based column index
-            if (col % 2 === 1) {
-              // Odd columns: wave.png rotates 3 full spins over 0-2 scroll
-              const rotation = Math.min(1, scrollProgress / 2) * 1080;
-              return (
-                <div className="flip-cell" key={i}>
-                  <div
-                    className="flip-inner"
-                    style={{ transform: `rotateY(${rotation}deg)` }}
-                  >
-                    <img
-                      src={waveImg}
-                      alt="emoji"
-                      className="emoji-img"
-                      draggable="false"
-                    />
-                  </div>
-                </div>
-              );
-            } else {
-              // Even columns: wave.png rotates 0-630deg, then zz.png continues 630-1080deg
-              const transitionPoint = 630 / 1080 * 2; // ~1.166
-              if (scrollProgress < transitionPoint) {
-                const localProgress = scrollProgress / transitionPoint;
-                const rotation = localProgress * 630;
-                return (
-                  <div className="flip-cell" key={i}>
-                    <div className="flip-inner" style={{ transform: `rotateY(${rotation}deg)` }}>
-                      <img
-                        src={waveImg}
-                        alt="emoji"
-                        className="emoji-img"
-                        draggable="false"
-                      />
-                    </div>
-                  </div>
-                );
+            let rotation, imgSrc;
+            if (scrollProgress <= 2) {
+              if (col % 2 === 1) {
+                // Odd columns: wave.png rotates 3 full spins over 0-2 scroll
+                rotation = Math.min(1, scrollProgress / 2) * 1080;
+                imgSrc = waveImg;
               } else {
-                const localProgress = (scrollProgress - transitionPoint) / (2 - transitionPoint);
-                // Continue rotation from 630deg to 1080deg
-                const rotation = 630 + Math.min(1, Math.max(0, localProgress)) * 450;
-                return (
-                  <div className="flip-cell" key={i}>
-                    <div className="flip-inner" style={{ transform: `rotateY(${rotation}deg)` }}>
-                      <img
-                        src={zzImg}
-                        alt="emoji"
-                        className="emoji-img"
-                        draggable="false"
-                      />
-                    </div>
-                  </div>
-                );
+                // Even columns: wave.png rotates 0-630deg, then zz.png continues 630-1080deg
+                const transitionPoint = 630 / 1080 * 2; // ~1.166
+                if (scrollProgress < transitionPoint) {
+                  const localProgress = scrollProgress / transitionPoint;
+                  rotation = localProgress * 630;
+                  imgSrc = waveImg;
+                } else {
+                  const localProgress = (scrollProgress - transitionPoint) / (2 - transitionPoint);
+                  rotation = 630 + Math.min(1, Math.max(0, localProgress)) * 450;
+                  imgSrc = zzImg;
+                }
+              }
+            } else {
+              // Final phase: all cells rotate one more full spin (1080deg to 1440deg)
+              const localProgress = (scrollProgress - 2) / 0.5;
+              rotation = 1080 + Math.min(1, Math.max(0, localProgress)) * 360;
+              // Use the last image for each cell
+              if (col % 2 === 1) {
+                imgSrc = waveImg;
+              } else {
+                imgSrc = zzImg;
               }
             }
+            return (
+              <div className="flip-cell" key={i}>
+                <div
+                  className="flip-inner"
+                  style={{ transform: `rotateY(${rotation}deg)` }}
+                >
+                  <img
+                    src={imgSrc}
+                    alt="emoji"
+                    className="emoji-img"
+                    draggable="false"
+                  />
+                </div>
+              </div>
+            );
           })}
         </div>
       </div>
-      {/* Increase scrollable area to 600vh for 2x scroll */}
-      <div style={{ height: '600vh' }} />
+      {/* Increase scrollable area to 750vh for 2.5x scroll */}
+      <div style={{ height: '750vh' }} />
     </div>
   );
 }
