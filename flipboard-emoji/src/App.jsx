@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import './App.css';
 import waveImg from './assets/wave.png';
 import zzImg from './assets/zz.png';
@@ -15,68 +15,106 @@ const preloadImages = () => {
   zzImage.src = zzImg;
 };
 
-// Ease in/out function (cubic)
-function easeInOutCubic(t) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
+// Throttle function for mobile performance
+const throttle = (func, limit) => {
+  let inThrottle;
+  return function() {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  }
+};
 
 function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const scrollContainerRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const lastScrollY = useRef(0);
+
+  // Optimized scroll handler with requestAnimationFrame
+  const handleScroll = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    animationFrameRef.current = requestAnimationFrame(() => {
+      const scrollY = window.scrollY;
+      const maxScroll = document.body.scrollHeight - window.innerHeight;
+      const progress = Math.min(2.5, Math.max(0, scrollY / maxScroll * 2.5));
+      setScrollProgress(progress);
+      lastScrollY.current = scrollY;
+    });
+  }, []);
+
+  // Throttled scroll handler for mobile
+  const throttledScrollHandler = useCallback(
+    throttle(handleScroll, 16), // ~60fps
+    [handleScroll]
+  );
 
   useEffect(() => {
     // Preload images when component mounts
     preloadImages();
     
-    const onScroll = () => {
-      const scrollY = window.scrollY;
-      const maxScroll = document.body.scrollHeight - window.innerHeight;
-      // Allow scrollProgress to go up to 2.5 (2.5x page height)
-      const progress = Math.min(2.5, Math.max(0, scrollY / maxScroll * 2.5));
-      setScrollProgress(progress);
+    // Use throttled handler for better mobile performance
+    window.addEventListener('scroll', throttledScrollHandler, { passive: true });
+    
+    return () => {
+      window.removeEventListener('scroll', throttledScrollHandler);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
-    window.addEventListener('scroll', onScroll);
-    return () => window.removeEventListener('scroll', onScroll);
+  }, [throttledScrollHandler]);
+
+  // Memoized rotation calculation to avoid recalculating on every render
+  const getRotationAndImage = useCallback((col, progress) => {
+    let rotation, imgSrc;
+    
+    if (progress <= 2) {
+      if (col % 2 === 1) {
+        // Odd columns: wave.png rotates 3 full spins over 0-2 scroll
+        rotation = Math.min(1, progress / 2) * 1080;
+        imgSrc = waveImg;
+      } else {
+        // Even columns: wave.png rotates 0-630deg, then zz.png continues 630-1080deg
+        const transitionPoint = 630 / 1080 * 2; // ~1.166
+        if (progress < transitionPoint) {
+          const localProgress = progress / transitionPoint;
+          rotation = localProgress * 630;
+          imgSrc = waveImg;
+        } else {
+          const localProgress = (progress - transitionPoint) / (2 - transitionPoint);
+          rotation = 630 + Math.min(1, Math.max(0, localProgress)) * 450;
+          imgSrc = zzImg;
+        }
+      }
+    } else {
+      // Final phase: all cells rotate one more full spin (1080deg to 1440deg)
+      const localProgress = Math.min(1, Math.max(0, (progress - 2) / 0.5));
+      rotation = 1080 + localProgress * 360;
+      // Use the last image for each cell
+      if (col % 2 === 1) {
+        imgSrc = waveImg;
+      } else {
+        imgSrc = zzImg;
+      }
+    }
+    
+    return { rotation, imgSrc };
   }, []);
 
   return (
     <div ref={scrollContainerRef}>
-      <div className="flipboard-grid-container small30">
-        <div className="flipboard-grid spaced">
+      <div className="flipboard-grid-container">
+        <div className="flipboard-grid">
           {Array.from({ length: NUM_CELLS }).map((_, i) => {
             const col = (i % NUM_COLS) + 1; // 1-based column index
-            let rotation, imgSrc;
-            
-            if (scrollProgress <= 2) {
-              if (col % 2 === 1) {
-                // Odd columns: wave.png rotates 3 full spins over 0-2 scroll
-                rotation = Math.min(1, scrollProgress / 2) * 1080;
-                imgSrc = waveImg;
-              } else {
-                // Even columns: wave.png rotates 0-630deg, then zz.png continues 630-1080deg
-                // Use 630° (1.75 rotations) for transition when image is "on edge"
-                const transitionPoint = 630 / 1080 * 2; // ~1.166
-                if (scrollProgress < transitionPoint) {
-                  const localProgress = scrollProgress / transitionPoint;
-                  rotation = localProgress * 630;
-                  imgSrc = waveImg;
-                } else {
-                  const localProgress = (scrollProgress - transitionPoint) / (2 - transitionPoint);
-                  rotation = 630 + Math.min(1, Math.max(0, localProgress)) * 450;
-                  imgSrc = zzImg;
-                }
-              }
-            } else {
-              // Final phase: all cells rotate one more full spin (1080deg to 1440deg)
-              const localProgress = Math.min(1, Math.max(0, (scrollProgress - 2) / 0.5));
-              rotation = 1080 + localProgress * 360;
-              // Use the last image for each cell
-              if (col % 2 === 1) {
-                imgSrc = waveImg;
-              } else {
-                imgSrc = zzImg;
-              }
-            }
+            const { rotation, imgSrc } = getRotationAndImage(col, scrollProgress);
             
             return (
               <div className="flip-cell" key={i}>
