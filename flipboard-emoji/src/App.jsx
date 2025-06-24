@@ -7,6 +7,14 @@ const NUM_ROWS = 10;
 const NUM_COLS = 10;
 const NUM_CELLS = NUM_ROWS * NUM_COLS;
 
+// Preload images to prevent loading delays during animation
+const preloadImages = () => {
+  const waveImage = new Image();
+  const zzImage = new Image();
+  waveImage.src = waveImg;
+  zzImage.src = zzImg;
+};
+
 // Ease in/out function (cubic)
 function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -17,6 +25,9 @@ function App() {
   const scrollContainerRef = useRef(null);
 
   useEffect(() => {
+    // Preload images when component mounts
+    preloadImages();
+    
     const onScroll = () => {
       const scrollY = window.scrollY;
       const maxScroll = document.body.scrollHeight - window.innerHeight;
@@ -35,6 +46,7 @@ function App() {
           {Array.from({ length: NUM_CELLS }).map((_, i) => {
             const col = (i % NUM_COLS) + 1; // 1-based column index
             let rotation, imgSrc;
+            
             if (scrollProgress <= 2) {
               if (col % 2 === 1) {
                 // Odd columns: wave.png rotates 3 full spins over 0-2 scroll
@@ -42,6 +54,7 @@ function App() {
                 imgSrc = waveImg;
               } else {
                 // Even columns: wave.png rotates 0-630deg, then zz.png continues 630-1080deg
+                // Use 630° (1.75 rotations) for transition when image is "on edge"
                 const transitionPoint = 630 / 1080 * 2; // ~1.166
                 if (scrollProgress < transitionPoint) {
                   const localProgress = scrollProgress / transitionPoint;
@@ -55,8 +68,8 @@ function App() {
               }
             } else {
               // Final phase: all cells rotate one more full spin (1080deg to 1440deg)
-              const localProgress = (scrollProgress - 2) / 0.5;
-              rotation = 1080 + Math.min(1, Math.max(0, localProgress)) * 360;
+              const localProgress = Math.min(1, Math.max(0, (scrollProgress - 2) / 0.5));
+              rotation = 1080 + localProgress * 360;
               // Use the last image for each cell
               if (col % 2 === 1) {
                 imgSrc = waveImg;
@@ -64,6 +77,7 @@ function App() {
                 imgSrc = zzImg;
               }
             }
+            
             return (
               <div className="flip-cell" key={i}>
                 <div
