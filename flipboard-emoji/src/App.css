@@ -104,74 +104,27 @@
   transform: rotateY(180deg);
 }
 
-/* Mobile styles */
-@media (max-width: 600px) {
-  .flipboard-grid-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100vh;
-  }
-  
-  .flipboard-grid {
-    grid-template-columns: repeat(8, 1fr); /* 8 columns for mobile */
-    grid-template-rows: repeat(8, 1fr); /* 8 rows for mobile */
-    gap: 8px;
-    width: 80vw; /* 80% of viewport width */
-    height: 80vw; /* 80% of viewport width to keep it square */
-    max-width: 400px; /* Cap the maximum size */
-    max-height: 400px;
-    min-width: 280px; /* Smaller minimum for 8x8 grid */
-    min-height: 280px; /* Smaller minimum for 8x8 grid */
-  }
-  
-  .flip-cell {
-    min-width: 30px; /* Smaller minimum for 8x8 grid */
-    min-height: 30px; /* Smaller minimum for 8x8 grid */
-  }
-  
-  .emoji-img {
-    width: 24px; /* Slightly smaller for mobile 8x8 grid */
-    height: 24px;
-  }
-}
-
 /* Hide scrollbars for aesthetics */
 body {
   overflow-x: hidden;
 }
 
 /* Make the grid container 30% of viewport width */
-.flipboard-grid-container.medium {
-  width: 33vw;
-  max-width: 33vw;
-  height: 33vw;
-  max-height: 33vw;
-  min-width: 220px;
-  min-height: 220px;
+.flipboard-grid-container.small30 {
+  width: 30vw;
+  max-width: 30vw;
+  height: 30vw;
+  max-height: 30vw;
+  min-width: 300px;
+  min-height: 300px;
 }
 
-.flipboard-grid {
-  gap: 0.1vw;
+.flipboard-grid.spaced {
+  gap: 0.7vw;
 }
 
 .flip-front, .flip-back {
   font-size: clamp(0.7vw, 2vw, 2.5vmin);
-}
-
-@media (max-width: 600px) {
-  .flipboard-grid-container.medium {
-    width: 80vw;
-    max-width: 80vw;
-    height: 80vw;
-    max-height: 80vw;
-    min-width: 120px;
-    min-height: 120px;
-  }
-  .flip-front, .flip-back {
-    font-size: clamp(1vw, 4vw, 4vmin);
-  }
 }
 
 .emoji-img {
@@ -197,72 +150,4 @@ body {
 
 .flip-back {
   transform: rotateY(180deg);
-}
-
-.flipboard-grid-container.small30 {
-  width: 30vw;
-  max-width: 30vw;
-  height: 30vw;
-  max-height: 30vw;
-  min-width: 300px;
-  min-height: 300px;
-}
-
-.flipboard-grid.spaced {
-  gap: 0.7vw;
-}
-
-.flip-cell {
-  width: 100%;
-  height: 100%;
-  aspect-ratio: 1 / 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.emoji-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-@media (max-width: 600px) {
-  .flipboard-grid-container.small30 {
-    width: 80vw;
-    max-width: 80vw;
-    height: 80vw;
-    max-height: 80vw;
-    min-width: 220px;
-    min-height: 220px;
-    margin: 0 10vw;
-  }
-  .flipboard-grid.spaced {
-    gap: 1.5vw;
-  }
-  .flip-cell {
-    width: 100%;
-    height: 100%;
-  }
-  .emoji-img {
-    width: 100%;
-    height: 100%;
-  }
-}
-
-@media (max-width: 1200px) {
-  .flipboard-grid-container.small30 {
-    min-width: 340px;
-    min-height: 340px;
-  }
-}
-
-@media (max-width: 800px) {
-  .flipboard-grid-container.small30 {
-    min-width: 320px;
-    min-height: 320px;
-  }
 }

@@ -7,10 +7,6 @@ const NUM_ROWS = 10;
 const NUM_COLS = 10;
 const NUM_CELLS = NUM_ROWS * NUM_COLS;
 
-const NUM_ROWS_MOBILE = 8;
-const NUM_COLS_MOBILE = 8;
-const NUM_CELLS_MOBILE = NUM_ROWS_MOBILE * NUM_COLS_MOBILE;
-
 // Ease in/out function (cubic)
 function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
@@ -18,17 +14,9 @@ function easeInOutCubic(t) {
 
 function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
   const scrollContainerRef = useRef(null);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 600);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
     const onScroll = () => {
       const scrollY = window.scrollY;
       const maxScroll = document.body.scrollHeight - window.innerHeight;
@@ -37,22 +25,15 @@ function App() {
       setScrollProgress(progress);
     };
     window.addEventListener('scroll', onScroll);
-    
-    return () => {
-      window.removeEventListener('resize', checkMobile);
-      window.removeEventListener('scroll', onScroll);
-    };
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  const numCells = isMobile ? NUM_CELLS_MOBILE : NUM_CELLS;
-  const numCols = isMobile ? NUM_COLS_MOBILE : NUM_COLS;
 
   return (
     <div ref={scrollContainerRef}>
       <div className="flipboard-grid-container small30">
         <div className="flipboard-grid spaced">
-          {Array.from({ length: numCells }).map((_, i) => {
-            const col = (i % numCols) + 1; // 1-based column index
+          {Array.from({ length: NUM_CELLS }).map((_, i) => {
+            const col = (i % NUM_COLS) + 1; // 1-based column index
             let rotation, imgSrc;
             if (scrollProgress <= 2) {
               if (col % 2 === 1) {
